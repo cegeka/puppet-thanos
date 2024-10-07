@@ -17,16 +17,42 @@ ruby_version_segments = Gem::Version.new(RUBY_VERSION.dup).segments
 minor_version = ruby_version_segments[0..1].join('.')
 
 group :development do
-  gem "fast_gettext", '1.1.0',                         require: false if Gem::Version.new(RUBY_VERSION.dup) < Gem::Version.new('2.1.0')
-  gem "fast_gettext",                                  require: false if Gem::Version.new(RUBY_VERSION.dup) >= Gem::Version.new('2.1.0')
-  gem "json_pure", '<= 2.0.1',                         require: false if Gem::Version.new(RUBY_VERSION.dup) < Gem::Version.new('2.0.0')
-  gem "json", '= 1.8.1',                               require: false if Gem::Version.new(RUBY_VERSION.dup) == Gem::Version.new('2.1.9')
-  gem "json", '= 2.0.4',                               require: false if Gem::Requirement.create('~> 2.4.2').satisfied_by?(Gem::Version.new(RUBY_VERSION.dup))
-  gem "json", '= 2.1.0',                               require: false if Gem::Requirement.create(['>= 2.5.0', '< 2.7.0']).satisfied_by?(Gem::Version.new(RUBY_VERSION.dup))
-  gem "puppet-module-posix-default-r#{minor_version}", require: false, platforms: [:ruby]
-  gem "puppet-module-posix-dev-r#{minor_version}",     require: false, platforms: [:ruby]
-  gem "puppet-module-win-default-r#{minor_version}",   require: false, platforms: [:mswin, :mingw, :x64_mingw]
-  gem "puppet-module-win-dev-r#{minor_version}",       require: false, platforms: [:mswin, :mingw, :x64_mingw]
+  gem "json", '= 2.0.4',                                         require: false if Gem::Requirement.create('~> 2.4.2').satisfied_by?(Gem::Version.new(RUBY_VERSION.dup))
+  gem "json", '= 2.1.0',                                         require: false if Gem::Requirement.create(['>= 2.5.0', '< 2.7.0']).satisfied_by?(Gem::Version.new(RUBY_VERSION.dup))
+  gem "json", '= 2.3.0',                                         require: false if Gem::Requirement.create(['>= 2.7.0', '< 2.8.0']).satisfied_by?(Gem::Version.new(RUBY_VERSION.dup))
+  gem "puppet-module-posix-default-r#{minor_version}", '~> 1.0', require: false, platforms: [:ruby]
+  gem "puppet-module-posix-dev-r#{minor_version}", '~> 1.0',     require: false, platforms: [:ruby]
+  gem "puppet-module-win-default-r#{minor_version}", '~> 1.0',   require: false, platforms: [:mswin, :mingw, :x64_mingw]
+  gem "puppet-module-win-dev-r#{minor_version}", '~> 1.0',       require: false, platforms: [:mswin, :mingw, :x64_mingw]
+  gem "voxpupuli-puppet-lint-plugins", '>= 3.0',                 require: false
+  gem 'rubocop-i18n',                                            require: false
+end
+group :system_tests do
+  gem "puppet-module-posix-system-r#{minor_version}", '~> 1.0', require: false, platforms: [:ruby]
+  gem "puppet-module-win-system-r#{minor_version}", '~> 1.0',   require: false, platforms: [:mswin, :mingw, :x64_mingw]
+  if beaker_version = ENV['BEAKER_VERSION']
+    gem 'beaker', *location_for(beaker_version)
+  else
+    gem 'beaker', '>= 4.2.0', :require => false
+  end
+  if beaker_rspec_version = ENV['BEAKER_RSPEC_VERSION']
+    gem 'beaker-rspec', *location_for(beaker_rspec_version)
+  else
+    gem 'beaker-rspec',  :require => false
+  end
+  gem 'rubocop-i18n',                       :require => false
+  gem 'serverspec',                         :require => false
+  gem 'beaker-hostgenerator', '>= 1.1.22',  :require => false
+  gem 'beaker-docker',                      :require => false
+  gem 'beaker-puppet',                      :require => false
+  gem 'beaker-vagrant',                     :require => false
+  gem 'beaker-puppet_install_helper',       :require => false
+  gem 'beaker-module_install_helper',       :require => false
+  gem 'rbnacl', '>= 4',                     :require => false
+  gem 'rbnacl-libsodium',                   :require => false
+  gem 'bcrypt_pbkdf',                       :require => false
+  gem 'ed25519',                            :require => false
+  gem 'net-telnet',                         :require => false
 end
 
 puppet_version = ENV['PUPPET_GEM_VERSION']
@@ -43,6 +69,7 @@ gems['puppet'] = location_for(puppet_version)
 gems['facter'] = location_for(facter_version) if facter_version
 gems['hiera'] = location_for(hiera_version) if hiera_version
 
+<<<<<<< HEAD
 if Gem.win_platform? && puppet_version =~ %r{^(file:///|git://)}
   # If we're using a Puppet gem on Windows which handles its own win32-xxx gem
   # dependencies (>= 3.5.0), set the maximum versions (see PUP-6445).
@@ -53,6 +80,8 @@ if Gem.win_platform? && puppet_version =~ %r{^(file:///|git://)}
   gems['win32-service'] =  ['0.8.8', require: false]
 end
 
+=======
+>>>>>>> puppet-thanos/master
 gems.each do |gem_name, gem_params|
   gem gem_name, *gem_params
 end

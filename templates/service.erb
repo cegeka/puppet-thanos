@@ -1,0 +1,21 @@
+# THIS FILE IS MANAGED BY PUPPET
+[Unit]
+Description=Thanos <%= @name %> module service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+<%- if @env_vars -%>
+<%- @env_vars.each do |value| -%>
+Environment=<%= value %>
+<%- end -%>
+<%- end -%>
+<% if @max_open_files %>LimitNOFILE=<%= @max_open_files %><% end %>
+User=<%= @user %>
+Group=<%= @group %>
+ExecStart=<%= @bin_path %> <%= @name %> \
+<%= @parameters %>
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

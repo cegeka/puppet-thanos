@@ -1,128 +1,136 @@
-# thanos::sidecar
+# @summary This class manages sidecar service
 #
-# A description of what this class does
+# This class install Sidecar as service sidecar for Prometheus server.
 #
-# @summary A short summary of the purpose of this class
-#
-# @param $log_level           [String] Optional      
-#   Log filtering level.
-# @param $gcloudtrace_project [String] Optional
-#   GCP project to send Google Cloud Trace tracings to. 
-#   If empty, tracing will be disabled.
-# @param $gcloudtrace_sample_factor [String] Optional
-#   How often we send traces (1/<sample_factor>).  
-#   If 0 no trace will be sent periodically, unless forced by baggage item. 
-#   See `pkg/tracing/tracing.go` for details.
-# @param $grpc_port [String] Required
-#   Listen port for gRPC endpoints (StoreAPI).
-# @oaram $grpc_address [String] Required
-#   Listen ip address for gRPC endpoints (StoreAPI). 
-#   Make sure this address is routable from other components if you use gossip, 
-#   'grpc_advertise_address' is empty and you require cross_node connection.
-# @param $grpc_advertise_address [String] optional
-#   Explicit (external) host:port address to advertise for gRPC StoreAPI in gossip cluster. 
-#   If empty, 'grpc_address' will be used.
-# @param $http_port [String] Required
-#   Listen port for HTTP endpoints.
-# @param $http_address [String] optional
-#   Listen host for HTTP endpoints.
-# @param $cluster_port [String] Required
-#   Listen port for gossip cluster.
-# @oaram $cluster_address [String] optional
-#   Listen ip address for gossip cluster.
-# @param $cluster_advertise_address [String]
-#   Explicit (external) ip:port address to advertise for gossip in gossip cluster. 
-#   Used internally for membership only
-# @param $cluster_peers [Array][String] required
-#   Initial peers to join the cluster. It can be either <ip:port>, or <domain:port>. 
-#   A lookup resolution is done only at the startup.
-# @param $cluster_gossip_interval [String] optional
-#   Interval between sending gossip messages. 
-#   By lowering this value (more frequent) gossip messages are propagated across 
-#   the cluster more quickly at the expense of increased bandwidth.
-# @param $cluster_pushpull_interval [String] optional
-#   Interval for gossip state syncs. Setting this interval lower (more frequent)
-#   will increase convergence speeds across larger clusters at the expense of 
-#   increased bandwidth usage.
-# @param $tsdb_path [String] optional
-#   Data directory of TSDB.
-# @param $gcs_bucket [String] optional
-#   Google Cloud Storage bucket name for stored blocks. 
-#   If empty sidecar won't store any block inside Google Cloud Storage.
-# @param $s3_bucket [String]
-#   S3_Compatible API bucket name for stored blocks.
-# @param $s3_endpoint [String] optional
-#   S3_Compatible API endpoint for stored blocks.
-# @param $s3_access_key [String] optional
-#   Access key for an S3_Compatible API.
-# @param $s3_insecure [String] optional
-#   Whether to use an insecure connection with an S3_Compatible API.
-# @param $s3_signature_version2 [String] optional
-#   Whether to use S3 Signature Version 2; otherwise Signature Version 4 will be used.
-# @param $s3_encrypt_sse [String] optional
-#   Whether to use Server Side Encryption
-# @param $reloader_config_file [String] optional
-#   Config file watched by the reloader.
-# @param $reloader_config_envsubst_file [String] optional
-#   Output file for environment variable substituted config file.
-# @param $reloader_rule_dir array[string] optional
-#   Rule directory for the reloader to refresh.
+# @param ensure
+#  State ensured from compact service.
+# @param user
+#  User running thanos.
+# @param group
+#  Group under which thanos is running.
+# @param bin_path
+#  Path where binary is located.
+# @param log_level
+#  Only log messages with the given severity or above. One of: [debug, info, warn, error, fatal]
+# @param log_format
+#  Output format of log messages. One of: [logfmt, json]
+# @param tracing_config_file
+#  Path to YAML file with tracing configuration. See format details: https://thanos.io/tracing.md/#configuration
+# @param http_address
+#  Listen host:port for HTTP endpoints.
+# @param http_grace_period
+#  Time to wait after an interrupt received for HTTP Server.
+# @param grpc_address
+#  Listen ip:port address for gRPC endpoints (StoreAPI). Make sure this address is routable from other components.
+# @param grpc_grace_period
+#  Time to wait after an interrupt received for GRPC Server.
+# @param grpc_server_tls_cert
+#  TLS Certificate for gRPC server, leave blank to disable TLS
+# @param grpc_server_tls_key
+#  TLS Key for the gRPC server, leave blank to disable TLS
+# @param grpc_server_tls_client_ca
+#  TLS CA to verify clients against. If no client CA is specified, there is no client verification on server side. (tls.NoClientCert)
+# @param prometheus_url
+#  URL at which to reach Prometheus's API. For better performance use local network.
+# @param prometheus_ready_timeout
+#  Maximum time to wait for the Prometheus instance to start up
+# @param tsdb_path
+#  Data directory of TSDB.
+# @param reloader_config_file
+#  Config file watched by the reloader.
+# @param reloader_config_envsubst_file
+#  Output file for environment variable substituted config file.
+# @param reloader_rule_dirs
+#  Rule directories for the reloader to refresh.
+# @param reloader_watch_interval
+#  Controls how often reloader re-reads config and rules.
+# @param reloader_retry_interval
+#  Controls how often reloader retries config reload in case of error.
+# @param objstore_config_file
+#  Path to YAML file that contains object store configuration. See format details: https://thanos.io/storage.md/#configuration
+# @param shipper_upload_compacted
+#  If true sidecar will try to upload compacted blocks as well. Useful for migration purposes.
+#  Works only if compaction is disabled on Prometheus. Do it once and then disable the flag when done.
+# @param min_time
+#  Start of time range limit to serve. Thanos sidecar will serve only metrics, which happened later than this value.
+#    Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m.
+#    Valid duration units are ms, s, m, h, d, w, y.
+# @param max_open_files
+#  Define how many open files the service is able to use
+#  In some cases, the default value (1024) needs to be increased
+# @param extra_params
+#  Parameters passed to the binary, ressently released in latest version of Thanos.
+# @param env_vars
+#  Environment variables passed during startup. Useful for example for ELASTIC_APM tracing integration.
 # @example
 #   include thanos::sidecar
 class thanos::sidecar (
-    String $log_level                                = 'info',
-    Optional[String] $gcloudtrace_project            = undef,
-    Integer $gcloudtrace_sample_factor               = 0,
-    Integer $grpc_port                               = 10901,
-    String $grpc_address                             = "0.0.0.0:${grpc_port}",
-    Optional[String] $grpc_advertise_address         = undef,
-    Integer $http_port                               = 10902,
-    String $http_address                             = "0.0.0.0:${http_port}",
-    Integer $cluster_port                            = 10900,
-    String $cluster_address                          = "0.0.0.0:${cluster_port}",
-    Optional[String] $cluster_advertise_address      = undef,
-    Array $cluster_peers                             = [],
-    Optional[String] $cluster_gossip_interval        = undef,
-    Optional[String] $cluster_pushpull_interval      = undef,
-    Optional[String] $cluster_refresh_interval       = undef,
-    Optional[String] $cluster_secret_key             = undef,
-    String $cluster_network_type                     = 'wan',
-    String $prometheus_url                           = 'http://localhost:9090',
-    Optional[String] $tsdb_path                      = undef,
-    Optional[String] $gcs_bucket                     = undef,
-    String $s3_bucket                                = 'prometheus',
-    Optional[String] $s3_endpoint                    = undef,
-    Optional[String] $s3_access_key                  = undef,
-    Optional[String] $s3_secret_key                  = undef,
-    Optional[Boolean] $s3_insecure                   = false,
-    Optional[Boolean] $s3_signature_version2         = false,
-    Optional[Boolean] $s3_encrypt_sse                = false,
-    Optional[String] $reloader_config_file           = undef,
-    Optional[String] $reloader_config_envsubst_file  = undef,
-    Optional[Array] $reloader_rule_dir               = undef,
-    Optional[String]  $sidecar_objstore_config_file  = '/etc/thanos/sidecar_bucket.yaml',
-    Boolean $cluster_enable                          = false,
+  Enum['present', 'absent']      $ensure                                = 'present',
+  String                         $user                                  = $thanos::user,
+  String                         $group                                 = $thanos::group,
+  Stdlib::Absolutepath           $bin_path                              = $thanos::bin_path,
+  Optional[Integer]              $max_open_files                        = undef,
+  # Binary Parameters
+  Thanos::Log_level              $log_level                             = 'info',
+  Enum['logfmt', 'json']         $log_format                            = 'logfmt',
+  Optional[Stdlib::Absolutepath] $tracing_config_file                   = $thanos::tracing_config_file,
+  String                         $http_address                          = '0.0.0.0:10902',
+  String                         $http_grace_period                     = '2m',
+  String                         $grpc_address                          = '0.0.0.0:10901',
+  String                         $grpc_grace_period                     = '2m',
+  Optional[Stdlib::Absolutepath] $grpc_server_tls_cert                  = undef,
+  Optional[Stdlib::Absolutepath] $grpc_server_tls_key                   = undef,
+  Optional[Stdlib::Absolutepath] $grpc_server_tls_client_ca             = undef,
+  Stdlib::HTTPUrl                $prometheus_url                        = 'http://localhost:9090',
+  String                         $prometheus_ready_timeout              = '10m',
+  Stdlib::Absolutepath           $tsdb_path                             = $thanos::tsdb_path,
+  Optional[Stdlib::Absolutepath] $reloader_config_file                  = undef,
+  Optional[Stdlib::Absolutepath] $reloader_config_envsubst_file         = undef,
+  Array[Stdlib::Absolutepath]    $reloader_rule_dirs                    = [],
+  String                         $reloader_watch_interval               = '3m',
+  String                         $reloader_retry_interval               = '5s',
+  Optional[Stdlib::Absolutepath] $objstore_config_file                  = undef,
+  Boolean                        $shipper_upload_compacted              = false,
+  Optional[String]               $min_time                              = undef,
+  # Extra parametes
+  Hash                           $extra_params                          = {},
+  Array                          $env_vars                              = [],
 ) {
-  include systemd
-  include thanos
-  include thanos::install
-
-  if $sidecar_objstore_config_file {
-    file { $sidecar_objstore_config_file:
-      ensure  => present,
-      group   => $thanos::group,
-      mode    => '0750',
-      owner   => $thanos::user,
-      content => template('thanos/bucket.yaml.erb'),
-    }
+  $_service_ensure = $ensure ? {
+    'present' => 'running',
+    default   => 'stopped'
   }
 
-  systemd::unit_file { 'thanos.service':
-  content => template('thanos/thanos.service.erb'),
-
-  } ~> service {'thanos':
-  ensure => 'running',
-  enable => true,
+  thanos::resources::service { 'sidecar':
+    ensure         => $_service_ensure,
+    bin_path       => $bin_path,
+    user           => $user,
+    group          => $group,
+    max_open_files => $max_open_files,
+    params         => {
+      'log.level'                     => $log_level,
+      'log.format'                    => $log_format,
+      'tracing.config-file'           => $tracing_config_file,
+      'http-address'                  => $http_address,
+      'http-grace-period'             => $http_grace_period,
+      'grpc-address'                  => $grpc_address,
+      'grpc-grace-period'             => $grpc_grace_period,
+      'grpc-server-tls-cert'          => $grpc_server_tls_cert,
+      'grpc-server-tls-key'           => $grpc_server_tls_key,
+      'grpc-server-tls-client-ca'     => $grpc_server_tls_client_ca,
+      'prometheus.url'                => $prometheus_url,
+      'prometheus.ready_timeout'      => $prometheus_ready_timeout,
+      'tsdb.path'                     => $tsdb_path,
+      'reloader.config-file'          => $reloader_config_file,
+      'reloader.config-envsubst-file' => $reloader_config_envsubst_file,
+      'reloader.rule-dir'             => $reloader_rule_dirs,
+      'reloader.watch-interval'       => $reloader_watch_interval,
+      'reloader.retry-interval'       => $reloader_retry_interval,
+      'objstore.config-file'          => $objstore_config_file,
+      'shipper.upload-compacted'      => $shipper_upload_compacted,
+      'min-time'                      => $min_time,
+    },
+    extra_params   => $extra_params,
+    env_vars       => $env_vars,
   }
-
 }

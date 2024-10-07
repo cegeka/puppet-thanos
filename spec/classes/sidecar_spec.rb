@@ -4,8 +4,52 @@ describe 'thanos::sidecar' do
   on_supported_os.each do |os, os_facts|
     context "on #{os}" do
       let(:facts) { os_facts }
+      let(:params) do
+        {
+          bin_path: '/usr/local/bin/thanos',
+          tsdb_path: '/opt/prometheus/data',
+          tracing_config_file: '/etc/thanos/tracing.yaml',
+          objstore_config_file: '/etc/thanos/storage.yaml',
+          user: 'thanos',
+          group: 'thanos',
+        }
+      end
 
-      it { is_expected.to compile }
+      it {
+        is_expected.to compile
+      }
+
+      it {
+        is_expected.to contain_thanos__resources__service('sidecar').with(
+          'ensure'   => 'running',
+          'bin_path' => '/usr/local/bin/thanos',
+          'user'     => 'thanos',
+          'group'    => 'thanos',
+          'params'   => {
+            'log.level'                             => 'info',
+            'log.format'                            => 'logfmt',
+            'tracing.config-file'                   => '/etc/thanos/tracing.yaml',
+            'http-address'                          => '0.0.0.0:10902',
+            'http-grace-period'                     => '2m',
+            'grpc-address'                          => '0.0.0.0:10901',
+            'grpc-grace-period'                     => '2m',
+            'grpc-server-tls-cert'                  => nil,
+            'grpc-server-tls-key'                   => nil,
+            'grpc-server-tls-client-ca'             => nil,
+            'prometheus.url'                        => 'http://localhost:9090',
+            'prometheus.ready_timeout'              => '10m',
+            'tsdb.path'                             => '/opt/prometheus/data',
+            'reloader.config-file'                  => nil,
+            'reloader.config-envsubst-file'         => nil,
+            'reloader.rule-dir'                     => [],
+            'reloader.watch-interval'               => '3m',
+            'reloader.retry-interval'               => '5s',
+            'objstore.config-file'                  => '/etc/thanos/storage.yaml',
+            'shipper.upload-compacted'              => false,
+            'min-time'                              => nil,
+          },
+        )
+      }
     end
   end
 end
