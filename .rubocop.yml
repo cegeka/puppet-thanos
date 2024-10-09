@@ -69,11 +69,7 @@ Style/TrailingCommaInArguments:
   Description: Prefer always trailing comma on multiline argument lists. This makes
     diffs, and re-ordering nicer.
   EnforcedStyleForMultiline: comma
-<<<<<<< HEAD
-Style/TrailingCommaInLiteral:
-=======
 Style/TrailingCommaInArrayLiteral:
->>>>>>> puppet-thanos/master
   Description: Prefer always trailing comma on multiline literals. This makes diffs,
     and re-ordering nicer.
   EnforcedStyleForMultiline: comma
@@ -94,11 +90,6 @@ Style/MethodCalledOnDoEndBlock:
   Enabled: true
 Style/StringMethods:
   Enabled: true
-<<<<<<< HEAD
-Layout/EndOfLine:
-  Enabled: false
-Layout/IndentHeredoc:
-=======
 I18n/GetText/DecorateFunctionMessage:
   Enabled: false
 I18n/RailsI18n/DecorateStringFormattingUsingInterpolation:
@@ -108,7 +99,6 @@ I18n/GetText/DecorateStringFormattingUsingPercent:
 Layout/EndOfLine:
   Enabled: false
 Layout/HeredocIndentation:
->>>>>>> puppet-thanos/master
   Enabled: false
 Metrics/AbcSize:
   Enabled: false

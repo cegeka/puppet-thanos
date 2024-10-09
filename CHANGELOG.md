@@ -136,10 +136,4 @@ All notable changes to this project will be documented in this file.
 
 **Features**
 
-<<<<<<< HEAD
-**Bugfixes**
-
-**Known Issues**
-=======
 - Installation and component's Service creation
->>>>>>> puppet-thanos/master
